@@ -32,7 +32,7 @@ public class Plugin {
 			return false;
 		Plugin plugin = (Plugin) o;
 		// field comparison
-		return gav.equals(plugin.gav) && getWikiUrl().equals(plugin.getWikiUrl());
+		return gav.equals(plugin.gav);
 	}
 
 
