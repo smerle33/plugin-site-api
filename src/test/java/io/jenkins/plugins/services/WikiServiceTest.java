@@ -33,7 +33,9 @@ public class WikiServiceTest {
   @Test
   public void testGetWikiContentConfluence() {
     final String url = "https://wiki.jenkins.io/display/JENKINS/Git+Plugin";
-    final String content = wikiService.getWikiContent(new Plugin() { public String getWikiUrl() { return url; } });
+    final String content = wikiService.getWikiContent(new Plugin() {
+      @Override public String getWikiUrl() { return url; }
+    });
     assertValidContent(content);
   }
 
@@ -54,7 +56,10 @@ public class WikiServiceTest {
 
   public void testGetWikiContentGit(String url) {
     System.setProperty("github.client.id", "dummy");
-    final String content = wikiService.getWikiContent(new Plugin() { public String getWikiUrl() { return url; } });
+    final String content = wikiService.getWikiContent(new Plugin() {
+      @Override public String getWikiUrl() { return url; }
+      @Override public String getDefaultBranch() { return "master"; }
+    });
     assertValidContent(content);
     // heading inserted by plugin site, should be removed here
     Assert.assertThat(content.toLowerCase(Locale.US),
@@ -67,7 +72,10 @@ public class WikiServiceTest {
   @Test
   public void testGetWikiContent404() {
     final String url = "https://wiki.jenkins.io/display/JENKINS/H2+API+Plugin";
-    final String content = wikiService.getWikiContent(new Plugin() { public String getWikiUrl() { return url; } });
+    final String content = wikiService.getWikiContent(new Plugin() {
+      @Override public String getWikiUrl() { return url; }
+      @Override public String getDefaultBranch() { return "master"; }
+    });
     Assert.assertNotNull("Wiki content is null", content);
     // if we know it's a 404, show "not found" rather than a link
     Assert.assertEquals(HttpClientWikiService.getNoDocumentationFound(), content);
@@ -103,7 +111,10 @@ public class WikiServiceTest {
     final String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     final String cleanContent = new GithubReadmeExtractor().extractHtml(
       content,
-      new Plugin() { @Override public String getWikiUrl() { return "https://github.com/jenkinsci/configuration-as-code-plugin"; } },
+      new Plugin() {
+        @Override public String getWikiUrl() { return "https://github.com/jenkinsci/configuration-as-code-plugin"; }
+        @Override public String getDefaultBranch() { return "master"; }
+      },
       wikiService
     );
     Assert.assertNotNull("Wiki content is null", cleanContent);
@@ -116,7 +127,10 @@ public class WikiServiceTest {
     final String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     final String cleanContent = new GithubReadmeExtractor().extractHtml(
       content,
-      new Plugin() { @Override public String getWikiUrl() { return "https://github.com/jenkinsci/configuration-as-code-plugin"; } },
+      new Plugin() {
+        @Override public String getWikiUrl() { return "https://github.com/jenkinsci/configuration-as-code-plugin"; }
+        @Override public String getDefaultBranch() { return "master"; }
+      },
       wikiService
     );
     Assert.assertNotNull("Wiki content is null", cleanContent);
