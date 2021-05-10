@@ -3,6 +3,8 @@ package io.jenkins.plugins.services.impl;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.jenkins.plugins.models.Plugin;
+
 public class GithubContentsExtractor extends GithubExtractor {
   private final static class GithubContentMatcher implements GithubMatcher {
     private final Matcher matcher;
@@ -40,12 +42,12 @@ public class GithubContentsExtractor extends GithubExtractor {
 
   private static final Pattern REPO_PATTERN = Pattern
       .compile("https?://github.com/jenkinsci/([^/.]+)/blob/([^/]+)/(.+\\.(md|adoc))$");
-  
+
   private static final String CONTENTS_ENDPOINT = "contents/%s";
 
   @Override
-  protected GithubMatcher getDelegate(String url) {
-    final Matcher matcher = REPO_PATTERN.matcher(url);
+  protected GithubMatcher getDelegate(Plugin plugin) {
+    final Matcher matcher = REPO_PATTERN.matcher(plugin.getWikiUrl());
     return new GithubContentMatcher(matcher);
   }
 

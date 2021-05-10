@@ -3,13 +3,17 @@ package io.jenkins.plugins.services.impl;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.jenkins.plugins.models.Plugin;
+
 public class GithubReadmeExtractor extends GithubExtractor {
 
   private final static class GithubReadmeMatcher implements GithubMatcher {
     private final Matcher matcher;
+    private final Plugin plugin;
 
-    private GithubReadmeMatcher(Matcher matcher) {
+    private GithubReadmeMatcher(Plugin plugin, Matcher matcher) {
       this.matcher = matcher;
+      this.plugin = plugin;
     }
 
     @Override
@@ -25,7 +29,7 @@ public class GithubReadmeExtractor extends GithubExtractor {
     @Override
     public String getBranch() {
       String branch = matcher.group(3);
-      return branch == null ? "master" : branch;
+      return branch == null ? plugin.getDefaultBranch() : branch;
     }
 
     @Override
@@ -44,9 +48,9 @@ public class GithubReadmeExtractor extends GithubExtractor {
       .compile("https?://github.com/jenkinsci/([^/.]+)(\\.git|/tree/([^/]+))?/?$");
 
   @Override
-  protected GithubMatcher getDelegate(String url) {
-    final Matcher matcher = REPO_PATTERN.matcher(url);
-    return new GithubReadmeMatcher(matcher);
+  protected GithubMatcher getDelegate(Plugin plugin) {
+    final Matcher matcher = REPO_PATTERN.matcher(plugin.getWikiUrl());
+    return new GithubReadmeMatcher(plugin, matcher);
   }
 
 }
