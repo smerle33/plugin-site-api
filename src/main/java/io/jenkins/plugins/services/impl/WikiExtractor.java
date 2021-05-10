@@ -4,16 +4,17 @@ import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
+import io.jenkins.plugins.models.Plugin;
 import io.jenkins.plugins.services.ServiceException;
 import org.apache.http.Header;
 
 public interface WikiExtractor {
 
   /**
-   * @param wikiUrl content URL
+   * @param plugin plugin
    * @return API url that for accessing rendered content
    */
-  String getApiUrl(@NotNull String wikiUrl);
+  String getApiUrl(@NotNull Plugin plugin);
 
   /**
    * <p>
@@ -21,12 +22,12 @@ public interface WikiExtractor {
    * </p>
    *
    * @param apiContent content retrieved from API
-   * @param url documentation URL
+   * @param plugin Plugin
    * @param service Client Wiki Service to use to get the content
    * @return cleaned content
    * @throws ServiceException in case something goes wrong
    */
-  String extractHtml(@NotNull String apiContent, String url, HttpClientWikiService service);
+  String extractHtml(@NotNull String apiContent, Plugin plugin, HttpClientWikiService service);
 
   /**
    * @return HTTP headers

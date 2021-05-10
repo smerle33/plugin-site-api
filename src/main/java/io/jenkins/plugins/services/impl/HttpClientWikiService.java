@@ -3,6 +3,8 @@ package io.jenkins.plugins.services.impl;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
+import io.jenkins.plugins.models.Plugin;
 import io.jenkins.plugins.services.ConfigurationService;
 import io.jenkins.plugins.services.ServiceException;
 import io.jenkins.plugins.services.WikiService;
@@ -32,7 +34,7 @@ public class HttpClientWikiService extends HttpClient implements WikiService {
 
   private Logger logger = LoggerFactory.getLogger(HttpClientWikiService.class);
 
-  private LoadingCache<String, String> wikiContentCache;
+  private LoadingCache<Plugin, String> wikiContentCache;
 
   public static final List<WikiExtractor> WIKI_URLS = new ArrayList<>();
 
@@ -55,55 +57,66 @@ public class HttpClientWikiService extends HttpClient implements WikiService {
     wikiContentCache = CacheBuilder.newBuilder()
       .expireAfterWrite(6, TimeUnit.HOURS)
       .maximumSize(1000)
-      .build(new CacheLoader<String, String>() {
+      .weakKeys()
+      .build(new CacheLoader<Plugin, String>() {
         @Override
-        public String load(String url) throws Exception {
+        public String load(Plugin plugin) throws Exception {
           // Load and clean the wiki content
-          return doGetWikiContent(url);
+          return doGetWikiContent(plugin);
         }
       });
   }
 
-  public boolean isValidWikiUrl(String url) {
-    return getExtractor(url).isPresent();
+  public boolean isValidWikiUrl(Plugin plugin) {
+    return getExtractor(plugin).isPresent();
   }
 
   @Override
-  public String getWikiContent(String url) throws ServiceException {
-    if (StringUtils.isNotBlank(url)) {
-      if (!isValidWikiUrl(url)) {
-        return getNonWikiContent(url);
-      }
-      try {
-        // This is what fires the CacheLoader that's defined in the postConstruct.
-        return wikiContentCache.get(url);
-      } catch (Exception e) {
-        logger.error("Problem getting wiki content", e);
-        return getNonWikiContent(url);
-      }
-    } else {
+  public String getWikiContent(Plugin plugin) throws ServiceException {
+    if (plugin == null) {
       return getNoDocumentationFound();
+    }
+
+    String url = plugin.getWikiUrl();
+    if (StringUtils.isBlank(url)) {
+      return getNoDocumentationFound();
+    }
+
+    if (!isValidWikiUrl(plugin)) {
+      return getNonWikiContent(url);
+    }
+
+    try {
+      // This is what fires the CacheLoader that's defined in the postConstruct.
+      return wikiContentCache.get(plugin);
+    } catch (Exception e) {
+      logger.error("Problem getting wiki content", e);
+      return getNonWikiContent(url);
     }
   }
 
-  private String doGetWikiContent(String wikiUrl) {
+  private String doGetWikiContent(Plugin plugin) {
+    if (plugin.getWikiUrl() == null) {
+      return null;
+    }
+
     for (WikiExtractor extractor: WIKI_URLS) {
-       String apiUrl = extractor.getApiUrl(wikiUrl);
+       String apiUrl = extractor.getApiUrl(plugin);
        if (apiUrl != null) {
-         List<Header> headers = new ArrayList(extractor.getHeaders());
+         List<Header> headers = new ArrayList<>(extractor.getHeaders());
          String content = getHttpContent(apiUrl, headers);
          headers.add(new BasicHeader("User-Agent", "jenkins-wiki-exporter/actually-plugin-site-api"));
          if (content == null) {
            return null; // error logged in getHttpContent
          }
-         return extractor.extractHtml(content, wikiUrl, this);
+         return extractor.extractHtml(content, plugin, this);
        }
      }
      return null;
   }
 
-  private Optional<WikiExtractor> getExtractor(String url) {
-    return WIKI_URLS.stream().filter(t -> (t.getApiUrl(url) != null)).findFirst();
+  private Optional<WikiExtractor> getExtractor(Plugin plugin) {
+    return WIKI_URLS.stream().filter(t -> (t.getApiUrl(plugin) != null)).findFirst();
   }
 
   /**

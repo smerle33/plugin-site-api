@@ -19,6 +19,22 @@ import java.util.Set;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Plugin {
+	@Override
+	public boolean equals(Object o) {
+		// self check
+		if (this == o)
+			return true;
+		// null check
+		if (o == null)
+			return false;
+		// type check and cast
+		if (getClass() != o.getClass())
+			return false;
+		Plugin plugin = (Plugin) o;
+		// field comparison
+		return gav.equals(plugin.gav);
+	}
+
 
   // Shouldn't have do specify serializer/deserializer but it produces a JSON object
   // if the JavaTimeModule is registered
@@ -95,6 +111,9 @@ public class Plugin {
   @JsonProperty("wiki")
   private Wiki wiki;
 
+  @JsonProperty("defaultBranch")
+  private String defaultBranch;
+
   @JsonProperty
   @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SS'Z'")
   @JsonSerialize(using = LocalDateTimeSerializer.class)
@@ -108,7 +127,7 @@ public class Plugin {
                 String excerpt, String gav, Set<String> labels, String name, LocalDateTime previousTimestamp,
                 String previousVersion, LocalDateTime releaseTimestamp, String requiredCore, Scm scm, String sha1,
                 Stats stats, String title, String url, String version, List<SecurityWarning> securityWarnings, Wiki wiki,
-                LocalDateTime firstRelease) {
+                LocalDateTime firstRelease, String defaultBranch) {
     this.buildDate = buildDate;
     this.categories = categories;
     this.dependencies = dependencies;
@@ -130,6 +149,7 @@ public class Plugin {
     this.securityWarnings = securityWarnings;
     this.wiki = wiki;
     this.firstRelease = firstRelease;
+    this.defaultBranch = defaultBranch;
   }
 
   public LocalDate getBuildDate() {
@@ -302,5 +322,20 @@ public class Plugin {
 
   public void setFirstRelease(LocalDateTime firstRelease) {
     this.firstRelease = firstRelease;
+  }
+
+  public String getDefaultBranch() {
+    return defaultBranch;
+  }
+
+  public void setDefaultBranch(String defaultBranch) {
+    this.defaultBranch = defaultBranch;
+  }
+
+  public String getWikiUrl() {
+    if (getWiki() == null) {
+      return null;
+    }
+    return getWiki().getUrl();
   }
 }

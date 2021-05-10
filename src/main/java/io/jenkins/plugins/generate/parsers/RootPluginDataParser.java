@@ -28,6 +28,7 @@ public class RootPluginDataParser implements PluginDataParser {
     plugin.setTitle(pluginJson.optString("title", null));
     plugin.setUrl(pluginJson.optString("url", null));
     plugin.setVersion(pluginJson.optString("version", null));
+    plugin.setDefaultBranch(pluginJson.optString("defaultBranch", null));
     if (StringUtils.isNotBlank(pluginJson.optString("buildDate", null))) {
       final LocalDate buildDate = LocalDate.parse(pluginJson.getString("buildDate"), BUILD_DATE_FORMATTER);
       plugin.setBuildDate(buildDate);

@@ -8,11 +8,12 @@ import java.util.regex.Pattern;
 import org.apache.http.Header;
 import org.jsoup.nodes.Element;
 
+import io.jenkins.plugins.models.Plugin;
 import io.jenkins.plugins.services.ServiceException;
 
 /**
  * Gets content from Jenkins wiki directly for non-standard patterns, e.g.
- * 
+ *
  * https://wiki.jenkins-ci.org/x/GAAHAQ
  * https://wiki.jenkins-ci.org/pages/viewpage.action?pageId=60915753
  */
@@ -22,7 +23,11 @@ public class ConfluenceDirectExtractor implements WikiExtractor {
       Pattern.CASE_INSENSITIVE);
 
   @Override
-  public String getApiUrl(String wikiUrl) {
+  public String getApiUrl(Plugin plugin) {
+    String wikiUrl = plugin.getWikiUrl();
+    if (wikiUrl == null) {
+      return null;
+    }
     Matcher matcher = WIKI_HOST_REGEXP.matcher(wikiUrl);
     if (matcher.find()) {
       return matcher.replaceFirst(BASE_URL);
@@ -31,7 +36,7 @@ public class ConfluenceDirectExtractor implements WikiExtractor {
   }
 
   @Override
-  public String extractHtml(String httpContent, String url, HttpClientWikiService service) {
+  public String extractHtml(String httpContent, Plugin plugin, HttpClientWikiService service) {
     return cleanWikiContent(httpContent, service);
   }
 
@@ -55,7 +60,7 @@ public class ConfluenceDirectExtractor implements WikiExtractor {
 
     // Remove the jira issues
     wikiContent.getElementsByClass(".jira-issues").remove();
-    
+
     // Replace href/src with the wiki url
     service.convertLinksToAbsolute(wikiContent, BASE_URL, "/display/JENKINS/");
     return wikiContent.html();

@@ -9,6 +9,8 @@ import org.apache.http.Header;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import io.jenkins.plugins.models.Plugin;
+
 import static io.jenkins.plugins.utils.StreamUtils.asStream;
 
 public class ConfluenceApiExtractor implements WikiExtractor {
@@ -17,7 +19,11 @@ public class ConfluenceApiExtractor implements WikiExtractor {
       .compile("^https?://wiki.jenkins(-ci.org|.io)/display/(jenkins|hudson)/([^/]*)/?$", Pattern.CASE_INSENSITIVE);
 
   @Override
-  public String extractHtml(String jsonStr, String url, HttpClientWikiService wikiService) {
+  public String extractHtml(String jsonStr, Plugin plugin, HttpClientWikiService wikiService) {
+    if (plugin.getWikiUrl() == null) {
+      return null;
+    }
+    String url = plugin.getWikiUrl();
     try {
       JSONArray json = new JSONObject(jsonStr).getJSONArray("results");
       if (json.length() > 0) {
@@ -44,8 +50,8 @@ public class ConfluenceApiExtractor implements WikiExtractor {
   }
 
   @Override
-  public String getApiUrl(String wikiUrl) {
-    Matcher matcher = WIKI_URL_REGEXP_TITLE.matcher(wikiUrl);
+  public String getApiUrl(Plugin plugin) {
+    Matcher matcher = WIKI_URL_REGEXP_TITLE.matcher(plugin.getWikiUrl());
     if (matcher.find()) {
       return String.format(WIKI_REST_API_TITLE, matcher.group(3));
     }

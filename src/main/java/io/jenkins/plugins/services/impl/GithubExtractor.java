@@ -13,6 +13,8 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.jenkins.plugins.models.Plugin;
+
 public abstract class GithubExtractor implements WikiExtractor {
   /**
    * Bootstrap class setting !important padding. Scrapped by extractor
@@ -24,8 +26,8 @@ public abstract class GithubExtractor implements WikiExtractor {
   private static final String API_URL_PATTERN = "https://api.github.com/repos/jenkinsci/%s/%s?ref=%s";
 
   @Override
-  public String getApiUrl(String wikiUrl) {
-    GithubMatcher matcher = getDelegate(wikiUrl);
+  public String getApiUrl(Plugin plugin) {
+    GithubMatcher matcher = getDelegate(plugin);
     if (!matcher.find()) {
       return null;
     }
@@ -34,10 +36,14 @@ public abstract class GithubExtractor implements WikiExtractor {
   }
 
   @Override
-  public String extractHtml(String apiContent, String url, HttpClientWikiService service) {
-    GithubMatcher matcher = getDelegate(url);
+  public String extractHtml(String apiContent, Plugin plugin, HttpClientWikiService service) {
+    String url = plugin.getWikiUrl();
+    if (url == null) {
+      return null;
+    }
+    GithubMatcher matcher = getDelegate(plugin);
     if (!matcher.find()) {
-      throw new IllegalArgumentException("Invalid github URL" + url);
+      throw new IllegalArgumentException("Invalid github URL" + plugin.getWikiUrl());
     }
     final Document html = Jsoup.parse(apiContent);
     final Element mainDiv = html.getElementsByTag("body").get(0).child(0);
@@ -52,7 +58,7 @@ public abstract class GithubExtractor implements WikiExtractor {
     return Collections.singletonList(header);
   }
 
-  protected abstract GithubMatcher getDelegate(String url);
+  protected abstract GithubMatcher getDelegate(Plugin plugin);
 
   protected void convertLinksToAbsolute(HttpClientWikiService service, Element wikiContent, String orgName, GithubMatcher matcher) {
     String repoName = matcher.getRepo();
