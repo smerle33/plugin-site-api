@@ -1,26 +1,25 @@
 package io.jenkins.plugins.models;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.vladsch.flexmark.ext.emoji.EmojiExtension;
-import com.vladsch.flexmark.ext.emoji.EmojiShortcutType;
-import com.vladsch.flexmark.ext.gfm.issues.GfmIssuesExtension;
-import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
-import com.vladsch.flexmark.ext.gfm.tasklist.TaskListExtension;
-import com.vladsch.flexmark.ext.gfm.users.GfmUsersExtension;
-import com.vladsch.flexmark.ext.tables.TablesExtension;
-import com.vladsch.flexmark.html.HtmlRenderer;
-import com.vladsch.flexmark.parser.Parser;
-import com.vladsch.flexmark.util.data.MutableDataSet;
-import io.jenkins.plugins.endpoints.PluginEndpoint;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.vdurmont.emoji.EmojiParser;
+
+import org.commonmark.ext.autolink.AutolinkExtension;
+import org.commonmark.ext.gfm.strikethrough.StrikethroughExtension;
+import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.commonmark.ext.ins.InsExtension;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PluginRelease {
@@ -33,26 +32,37 @@ public class PluginRelease {
   private String body;
 
   @JsonProperty("bodyHTML") public String getBodyHTML() {
-    MutableDataSet options = new MutableDataSet();
+    String baseUrl = "";
 
-    options.set(Parser.EXTENSIONS, Arrays.asList(
-      TablesExtension.create(),
-      StrikethroughExtension.create(),
-      GfmUsersExtension.create(),
-      TaskListExtension.create(),
-      GfmIssuesExtension.create(),
-      EmojiExtension.create()
-    ));
-    options.set(EmojiExtension.USE_SHORTCUT_TYPE, EmojiShortcutType.GITHUB);
     try {
-      options.set(GfmIssuesExtension.GIT_HUB_ISSUES_URL_ROOT, new URI(this.htmlUrl + "/../../../issues").normalize().toString());
+      baseUrl = new URI(this.htmlUrl + "/../../../issues").normalize().toString();
     } catch (URISyntaxException e) {
-      logger.error("Unable to process html_url", e);
+      e.printStackTrace();
     }
 
-    HtmlRenderer htmlRenderer = HtmlRenderer.builder(options).escapeHtml(true).build();
-    Parser markdownParser = Parser.builder(options).build();
-    return htmlRenderer.render(markdownParser.parse(this.body.replaceAll("<!--.*?-->", "")));
+    List<org.commonmark.Extension> extensions = Arrays.asList(
+        TablesExtension.create(),
+        AutolinkExtension.create(),
+        StrikethroughExtension.create(),
+        InsExtension.create()
+    );
+    HtmlRenderer htmlRenderer = HtmlRenderer.builder().extensions(extensions).escapeHtml(true).sanitizeUrls(true).build();
+    Parser markdownParser = Parser.builder().extensions(extensions).build();
+
+    Node document = markdownParser.parse(
+        EmojiParser.parseToUnicode(
+          this.body
+            .replaceAll("<!--.*?-->", "")
+            .replaceAll("#\\b([0-9]+)\\b", "[#$1](" + baseUrl + "/$1)")
+            .replaceAll("(\\b|\\s)+@(\\w+)(\\b|\\s)+", "$1[**@$2**](https://github.com/$2)$3")
+        )
+    );
+    return htmlRenderer
+      .render(document)
+      .replaceAll("\\s+rel=\"nofollow\"\\s+", " ")
+      .replaceAll("(\\\t|\\\n)", "")
+      .replaceAll("\\s+", " ")
+      .trim();
   }
 
 
