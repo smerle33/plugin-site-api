@@ -59,7 +59,6 @@ public class PluginRelease {
     );
     return htmlRenderer
       .render(document)
-      .replaceAll("\\s+rel=\"nofollow\"\\s+", " ")
       .replaceAll("(\\\t|\\\n)", "")
       .replaceAll("\\s+", " ")
       .trim();
