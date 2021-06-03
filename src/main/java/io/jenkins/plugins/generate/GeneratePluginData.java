@@ -33,6 +33,8 @@ public class GeneratePluginData {
   private static final Logger logger = LoggerFactory.getLogger(GeneratePluginData.class);
 
   private static final String UPDATE_CENTER_JSON = "https://updates.jenkins.io/current/update-center.actual.json";
+  // trend value of plugin with no dependencies that was installed on 1% instances in a month
+  private static final double TREND_POINTS_PER_PERCENT = 1E4;
 
   public static void main(String[] args) {
     final GeneratePluginData generatePluginData = new GeneratePluginData();
@@ -55,15 +57,45 @@ public class GeneratePluginData {
       new WikiPluginDataParser()
     );
     final JSONObject pluginsJson = updateCenterJson.getJSONObject("plugins");
+    final HashMap<String, List<Plugin>> reverseDependencies = new HashMap<>();
     final List<Plugin> plugins = pluginsJson.keySet().stream()
       .map(pluginsJson::getJSONObject)
       .map(pluginJson -> {
         final Plugin plugin = new Plugin();
         parsers.forEach(parser -> parser.parse(pluginJson, plugin));
+        computeReverseDependencies(plugin, reverseDependencies);
         return plugin;
       })
       .collect(Collectors.toList());
+    plugins.forEach(p -> computeTrend(p, reverseDependencies));
     writePluginsToFile(plugins);
+  }
+
+  private void computeReverseDependencies(Plugin plugin,
+                                          HashMap<String, List<Plugin>> reverseDependencies) {
+    plugin.getDependencies().stream().filter(d -> !d.isOptional()).forEach(dependency -> {
+      reverseDependencies.computeIfAbsent(dependency.getName(), e -> new ArrayList<>()).add(plugin);
+    });
+  }
+
+  private void computeTrend(Plugin plugin, HashMap<String, List<Plugin>> reverseDependencies) {
+    double dependentInstallPctLastMonth = reverseDependencies
+      .getOrDefault(plugin.getName(), Collections.emptyList()).stream()
+      .map(p -> getInstallPct(p, 1))
+      .max(Double::compare).orElse(0.0);
+    double installPctLastMonth = getInstallPct(plugin, 1);
+    double installPctDiff =  installPctLastMonth - getInstallPct(plugin, 2);
+    double independence = Math.max(0, 1 - dependentInstallPctLastMonth / installPctLastMonth);
+    int trend =  (int) (installPctDiff * independence * TREND_POINTS_PER_PERCENT);
+    plugin.getStats().setTrend(trend);
+  }
+
+  private double getInstallPct(Plugin p, int monthsAgo) {
+    List<InstallationPercentage> stats = p.getStats().getInstallationsPercentage();
+    if (stats != null && stats.size() >= monthsAgo) {
+      return stats.get(stats.size() - monthsAgo).getPercentage();
+    }
+    return 0;
   }
 
   private JSONObject getUpdateCenterJson() {
