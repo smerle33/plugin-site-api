@@ -54,7 +54,7 @@ public class PluginRelease {
           this.body
             .replaceAll("<!--.*?-->", "")
             .replaceAll("#\\b([0-9]+)\\b", "[#$1](" + baseUrl + "/$1)")
-            .replaceAll("(\\b|\\s)+@(\\w+)(\\b|\\s)+", "$1[**@$2**](https://github.com/$2)$3")
+            .replaceAll("(\\b|\\s)+@([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,38})(\\b|\\s)+", "$1[**@$2**](https://github.com/$2)$3")
         )
     );
     return htmlRenderer
