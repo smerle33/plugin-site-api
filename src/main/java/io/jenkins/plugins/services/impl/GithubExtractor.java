@@ -23,7 +23,7 @@ public abstract class GithubExtractor implements WikiExtractor {
   public static final String BOOTSTRAP_PADDING_5 = "p-5";
   private static final Logger LOGGER = LoggerFactory.getLogger(GithubReadmeExtractor.class);
 
-  private static final String API_URL_PATTERN = "https://api.github.com/repos/jenkinsci/%s/%s?ref=%s";
+  private static final String API_URL_PATTERN = "https://api.github.com/repos/%s/%s/%s?ref=%s";
 
   @Override
   public String getApiUrl(Plugin plugin) {
@@ -32,7 +32,7 @@ public abstract class GithubExtractor implements WikiExtractor {
       return null;
     }
 
-    return String.format(API_URL_PATTERN, matcher.getRepo(), matcher.getEndpoint(), matcher.getBranch());
+    return String.format(API_URL_PATTERN, matcher.getOrganization(), matcher.getRepo(), matcher.getEndpoint(), matcher.getBranch());
   }
 
   @Override
@@ -47,8 +47,7 @@ public abstract class GithubExtractor implements WikiExtractor {
     }
     final Document html = Jsoup.parse(apiContent);
     final Element mainDiv = html.getElementsByTag("body").get(0).child(0);
-    //TODO(oleg_nenashev): Support organization and branch customization?
-    convertLinksToAbsolute(service, mainDiv, "jenkinsci", matcher);
+    convertLinksToAbsolute(service, mainDiv, matcher.getOrganization(), matcher);
     return mainDiv.toString();
   }
 

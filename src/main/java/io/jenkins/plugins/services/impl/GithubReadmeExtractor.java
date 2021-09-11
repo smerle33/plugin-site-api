@@ -29,7 +29,7 @@ public class GithubReadmeExtractor extends GithubExtractor {
 
     @Override
     public String getBranch() {
-      return ObjectUtils.firstNonNull(matcher.group(3),
+      return ObjectUtils.firstNonNull(matcher.group(4),
         plugin.getDefaultBranch(), "master");
     }
 
@@ -40,13 +40,18 @@ public class GithubReadmeExtractor extends GithubExtractor {
 
     @Override
     public String getRepo() {
+      return matcher.group(2);
+    }
+
+    @Override
+    public String getOrganization() {
       return matcher.group(1);
     }
   }
 
   private static final String README_ENDPOINT = "readme";
   private static final Pattern REPO_PATTERN = Pattern
-      .compile("https?://github.com/jenkinsci/([^/.]+)(\\.git|/tree/([^/]+))?/?$");
+      .compile("https?://github.com/(jenkinsci|jenkins-infra)/([^/.]+)(\\.git|/tree/([^/]+))?/?$");
 
   @Override
   protected GithubMatcher getDelegate(Plugin plugin) {

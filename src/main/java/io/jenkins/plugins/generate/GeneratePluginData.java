@@ -54,7 +54,8 @@ public class GeneratePluginData {
       new ScmPluginDataParser(),
       new SecurityWarningsPluginDataParser(updateCenterJson),
       new StatsPluginDataParser(),
-      new WikiPluginDataParser()
+      new WikiPluginDataParser(),
+      new RemoveWikiUrls()
     );
     final JSONObject pluginsJson = updateCenterJson.getJSONObject("plugins");
     final HashMap<String, List<Plugin>> reverseDependencies = new HashMap<>();
