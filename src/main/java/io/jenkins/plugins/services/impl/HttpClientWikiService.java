@@ -41,8 +41,6 @@ public class HttpClientWikiService extends HttpClient implements WikiService {
   public static final String EXTERNAL_DOCUMENTATION_PREFIX = "Documentation for this plugin is here: ";
 
   static {
-      WIKI_URLS.add(new ConfluenceApiExtractor());
-      WIKI_URLS.add(new ConfluenceDirectExtractor());
       WIKI_URLS.add(new GithubReadmeExtractor());
       WIKI_URLS.add(new GithubContentsExtractor());
   }

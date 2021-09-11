@@ -12,7 +12,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
@@ -28,15 +27,6 @@ public class WikiServiceTest {
   public void setUp() {
     wikiService = new HttpClientWikiService(new DefaultConfigurationService());
     wikiService.postConstruct();
-  }
-
-  @Test
-  public void testGetWikiContentConfluence() {
-    final String url = "https://wiki.jenkins.io/display/JENKINS/Git+Plugin";
-    final String content = wikiService.getWikiContent(new Plugin() {
-      @Override public String getWikiUrl() { return url; }
-    });
-    assertValidContent(content);
   }
 
   @Test
@@ -70,18 +60,6 @@ public class WikiServiceTest {
   }
 
   @Test
-  public void testGetWikiContent404() {
-    final String url = "https://wiki.jenkins.io/display/JENKINS/H2+API+Plugin";
-    final String content = wikiService.getWikiContent(new Plugin() {
-      @Override public String getWikiUrl() { return url; }
-      @Override public String getDefaultBranch() { return "master"; }
-    });
-    Assert.assertNotNull("Wiki content is null", content);
-    // if we know it's a 404, show "not found" rather than a link
-    Assert.assertEquals(HttpClientWikiService.getNoDocumentationFound(), content);
-  }
-
-  @Test
   public void testGetWikiContentNotJenkins() {
     final String url = "https://www.google.com";
     final String content = wikiService.getWikiContent(new Plugin() { public String getWikiUrl() { return url; } });
@@ -94,15 +72,6 @@ public class WikiServiceTest {
     final String content = wikiService.getWikiContent(new Plugin());
     Assert.assertNotNull("Wiki content is null", content);
     Assert.assertEquals(HttpClientWikiService.getNoDocumentationFound(), content);
-  }
-
-  @Test
-  public void testCleanWikiContentConfluence() throws IOException {
-    final File file = new File("src/test/resources/wiki_content.html");
-    final String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    final String cleanContent = ConfluenceDirectExtractor.cleanWikiContent(content, wikiService);
-    Assert.assertNotNull("Wiki content is null", cleanContent);
-    assertAllLinksMatch(cleanContent, "https?://.*", "https://.*");
   }
 
   @Test
@@ -180,26 +149,6 @@ public class WikiServiceTest {
 
   private Element makeImage(String src) {
     return Jsoup.parseBodyFragment(String.format("<img id=\"test-image\" src=\"%s\"/>", src)).getElementById("test-image");
-  }
-
-  @Test
-  public void testConfluenceApiExtractor() {
-    ConfluenceApiExtractor confluenceApi = new ConfluenceApiExtractor();
-    assertInvalid(confluenceApi, "https://wiki.jenkins-ci.org");
-    assertInvalid(confluenceApi, "https://wiki.jenkins.io");
-    assertInvalid(confluenceApi, "https://wiki.jenkins.io/x/123");
-    assertInvalid(confluenceApi, "https://wiki.jenkins.io/display/JENKINS/Git+Plugin/2");
-    assertValid(confluenceApi, "https://wiki.jenkins.io/display/JENKINS/Git+Plugin");
-    assertValid(confluenceApi, "https://wiki.jenkins.io/display/JENKINS/Git+Plugin/");
-    assertValid(confluenceApi, "http://wiki.jenkins-ci.org/display/jenkins/Git+Plugin");
-  }
-
-  @Test
-  public void testConfluenceDirectExtractor() {
-    ConfluenceDirectExtractor confluenceApi = new ConfluenceDirectExtractor();
-    assertValid(confluenceApi, "https://wiki.jenkins.io/pages/viewpage.action?pageId=60915753");
-    assertValid(confluenceApi, "https://wiki.jenkins.io/x/xyz");
-    assertInvalid(confluenceApi, "https://example.com");
   }
 
   @Test
