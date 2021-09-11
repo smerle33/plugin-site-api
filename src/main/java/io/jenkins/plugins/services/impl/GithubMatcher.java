@@ -28,4 +28,9 @@ public interface GithubMatcher {
    * @return repository name
    */
   String getRepo();
+
+  /**
+   * @return organization name
+   */
+  String getOrganization();
 }
