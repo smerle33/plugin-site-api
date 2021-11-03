@@ -3,6 +3,8 @@
 def isPullRequest = !!(env.CHANGE_ID)
 def pushToDocker = infra.isTrusted()
 String shortCommit = ''
+String tag = ''
+String dockerImage = ''
 
 if (!isPullRequest) {
     properties([
@@ -19,6 +21,7 @@ node('docker&&linux') {
         checkout scm
         sh 'git rev-parse HEAD > GIT_COMMIT'
         shortCommit = readFile('GIT_COMMIT').take(6)
+        tag = sh ( script: 'git tag --points-at HEAD', returnStdout: true ).trim()
     }
 
     timestamps {
@@ -66,10 +69,16 @@ node('docker&&linux') {
              */
             def container
             stage('Containerize') {
-                container = docker.build("jenkinsciinfra/plugin-site-api:${env.BUILD_ID}-${shortCommit}",
-                                        '--no-cache --rm .')
+                if (tag.isEmpty()) {
+                  echo "No tag for this commit, creating a docker image with ${shortCommit} version..."
+                  dockerImage = "jenkinsciinfra/plugin-site-api:${env.BUILD_ID}-${shortCommit}"
+                } else {
+                  echo "Tag found for this commit, creating a docker image with ${tag} version..."
+                  dockerImage = "jenkinsciinfra/plugin-site-api:${tag}"
+                }
+                container = docker.build(dockerImage, '--no-cache --rm .')
                 if (pushToDocker) {
-                    echo "Pushing container jenkinsciinfra/plugin-site-api:${env.BUILD_ID}-${shortCommit}"
+                    echo "Pushing container ${dockerImage}"
                     infra.withDockerCredentials {
                         container.push()
                     }
@@ -90,7 +99,7 @@ node('docker&&linux') {
 
             stage('Tag container as latest') {
                 if (pushToDocker) {
-                    echo "Tagging jenkinsciinfra/plugin-site-api:${env.BUILD_ID}-${shortCommit} as latest"
+                    echo "Tagging ${dockerImage} as latest"
                     infra.withDockerCredentials {
                         container.push('latest')
                     }
