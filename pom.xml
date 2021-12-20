@@ -4,7 +4,7 @@
   <groupId>io.jenkins</groupId>
   <artifactId>plugin-site-api</artifactId>
   <packaging>war</packaging>
-  <version>1.12.1-SNAPSHOT</version>
+  <version>1.13.0</version>
 
   <properties>
     <jackson.version>2.11.1</jackson.version>
@@ -303,7 +303,7 @@
     <developerConnection>scm:git:ssh://git@github.com/jenkins-infra/plugin-site-api.git</developerConnection>
     <connection>scm:git:ssh://git@github.com/jenkins-infra/plugin-site-api.git</connection>
     <url>https://github.com/jenkins-infra/plugin-site-api</url>
-    <tag>HEAD</tag>
+    <tag>plugin-site-api-1.13.0</tag>
   </scm>
 
   <profiles>
