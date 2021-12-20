@@ -81,6 +81,8 @@ public class PluginEndpoint {
   @Path("/issues/open")
   @GET
   public JiraIssues getIssue(@PathParam("name") String name) {
+    throw new WebApplicationException(Response.Status.NOT_FOUND);
+    /*
     try {
       final Plugin plugin = datastoreService.getPlugin(name);
       if (plugin == null) {
@@ -91,6 +93,7 @@ public class PluginEndpoint {
       logger.error("Problem getting plugin " + name, e);
       throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
     }
+    */
   }
 
   /**

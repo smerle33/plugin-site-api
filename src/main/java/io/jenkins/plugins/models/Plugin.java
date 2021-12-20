@@ -338,4 +338,8 @@ public class Plugin {
     }
     return getWiki().getUrl();
   }
+
+  public String toString() {
+    return getClass().getName() + '@' + this.getName();
+  }
 }
