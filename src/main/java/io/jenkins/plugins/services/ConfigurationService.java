@@ -18,11 +18,7 @@ public interface ConfigurationService {
      */
   GeneratedPluginData getIndexData() throws ServiceException;
 
-  List<Header> getJiraCredentials();
-
   List<Header> getGithubCredentials();
-
-  String getJiraURL();
 
   String getGithubApiBase();
 }

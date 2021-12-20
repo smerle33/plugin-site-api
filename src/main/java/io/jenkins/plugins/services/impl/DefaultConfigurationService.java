@@ -122,23 +122,6 @@ public class DefaultConfigurationService implements ConfigurationService {
     }
   }
 
-  public String getJiraURL() {
-    return "https://issues.jenkins-ci.org";
-  }
-
-  protected String getJiraUsername() {
-    return StringUtils.trimToNull(System.getenv("JIRA_USERNAME"));
-  }
-
-  protected String getJiraPassword() {
-    return StringUtils.trimToNull(System.getenv("JIRA_PASSWORD"));
-  }
-
-  public List<Header> getJiraCredentials() {
-    String encoding = Base64.getEncoder().encodeToString((this.getJiraUsername() + ":" + this.getJiraPassword()).getBytes());
-    return Collections.singletonList(new BasicHeader(HttpHeaders.AUTHORIZATION, "Basic " + encoding));
-  }
-
   // borrowed from https://github.com/jenkinsci/github-branch-source-plugin/blob/07b69ab4f9d9ed718416ac63af67102de5e172fa/src/main/java/org/jenkinsci/plugins/github_branch_source/GitHubAppCredentials.java#L107
   @SuppressWarnings("deprecation") // preview features are required for GitHub app integration, GitHub api adds deprecated to all preview methods
   String generateAppInstallationToken(String appId, String appPrivateKey) {

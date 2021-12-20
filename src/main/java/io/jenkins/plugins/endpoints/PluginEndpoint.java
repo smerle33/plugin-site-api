@@ -1,13 +1,11 @@
 package io.jenkins.plugins.endpoints;
 
-import io.jenkins.plugins.models.JiraIssues;
 import io.jenkins.plugins.models.Plugin;
 import io.jenkins.plugins.services.ConfigurationService;
 import io.jenkins.plugins.services.DatastoreService;
 import io.jenkins.plugins.services.ServiceException;
 import io.jenkins.plugins.services.WikiService;
 import io.jenkins.plugins.services.impl.HttpClientReleases;
-import io.jenkins.plugins.services.impl.HttpClientJiraIssues;
 import io.jenkins.plugins.models.PluginReleases;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +44,6 @@ public class PluginEndpoint {
   @Inject
   private HttpClientReleases httpClientReleases;
 
-  @Inject
-  private HttpClientJiraIssues httpClientJiraIssues;
-
   /**
    * <p>Get a plugin by name</p>
    *
@@ -67,27 +62,6 @@ public class PluginEndpoint {
         throw new WebApplicationException(Response.Status.NOT_FOUND);
       }
     } catch (ServiceException e) {
-      logger.error("Problem getting plugin " + name, e);
-      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  /**
-   * <p>Get issues</p>
-   *
-   * @param name The plugin to retrieve
-   * @return Matching issues
-   */
-  @Path("/issues/open")
-  @GET
-  public JiraIssues getIssue(@PathParam("name") String name) {
-    try {
-      final Plugin plugin = datastoreService.getPlugin(name);
-      if (plugin == null) {
-        throw new WebApplicationException(Response.Status.NOT_FOUND);
-      }
-      return httpClientJiraIssues.getIssues(plugin.getName());
-    } catch (ServiceException | IOException e) {
       logger.error("Problem getting plugin " + name, e);
       throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
     }
