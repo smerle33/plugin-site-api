@@ -23,7 +23,7 @@ public class StatsPluginDataParser implements PluginDataParser {
     try {
       statisticsPath = Files.createTempDirectory("infra-statistics");
       logger.info("Cloning jenkins-infra/infra-statistics");
-      Git.cloneRepository().setURI("git://github.com/jenkins-infra/infra-statistics.git").setBranch("gh-pages").setDirectory(statisticsPath.toFile()).call();
+      Git.cloneRepository().setURI("https://github.com/jenkins-infra/infra-statistics.git").setBranch("gh-pages").setDirectory(statisticsPath.toFile()).call();
       logger.info("Finished cloning jenkins-infra/infra-statistics");
     } catch (Exception e) {
       logger.error("Problem downloading plugin statistics", e);
