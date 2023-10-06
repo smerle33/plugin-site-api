@@ -27,7 +27,7 @@ node('docker&&linux') {
     timestamps {
         stage('Generate Plugin Data') {
           infra.runWithMaven(
-            'mvn -PgeneratePluginData',
+            'mvn --no-transfer-progress -PgeneratePluginData',
             /*jdk*/ '11',
             /*extraEnv*/ null,
             /*addToolEnv*/ false
@@ -50,7 +50,7 @@ node('docker&&linux') {
                 'DATA_FILE_URL=http://localhost/plugins.json.gzip',
               ]) {
                 infra.runWithMaven(
-                    'mvn -Dmaven.test.failure.ignore verify',
+                    'mvn --no-transfer-progress -Dmaven.test.failure.ignore verify',
                     /*jdk*/ '11',
                     /*extraEnv*/ null,
                     /*addToolEnv*/ false
