@@ -26,9 +26,12 @@ node('docker&&linux') {
 
     timestamps {
         stage('Generate Plugin Data') {
-            docker.image('maven').inside {
-              sh 'mvn -PgeneratePluginData'
-            }
+          infra.runWithMaven(
+            'mvn -PgeneratePluginData',
+            /*jdk*/ '17',
+            /*extraEnv*/ null,
+            /*addToolEnv*/ false
+          )
         }
 
         /*
@@ -36,25 +39,23 @@ node('docker&&linux') {
          * DATA_FILE_URL necessary for the build and execution of the docker
          * container
          */
-        docker.image('nginx:alpine').withRun('-v $PWD/target:/usr/share/nginx/html') { c ->
+        docker.image('nginx:alpine').withRun('-p 80:80 -v $PWD/target:/usr/share/nginx/html') { c ->
 
             /*
              * Building our war file inside a Maven container which links to
              * the nginx container for accessing the DATA_FILE_URL
              */
             stage('Build') {
-                docker.image('maven:3-adoptopenjdk-11').inside("--link ${c.id}:nginx") {
-                    withEnv([
-                        'DATA_FILE_URL=http://nginx/plugins.json.gzip',
-                    ]) {
-                        infra.runWithMaven(
-                            'mvn -Dmaven.test.failure.ignore verify',
-                            /*jdk*/ "8",
-                            /*extraEnv*/ null,
-                            /*addToolEnv*/ false
-                          )
-                    }
-                }
+              withEnv([
+                'DATA_FILE_URL=http://localhost/plugins.json.gzip',
+              ]) {
+                infra.runWithMaven(
+                    'mvn -Dmaven.test.failure.ignore verify',
+                    /*jdk*/ '17',
+                    /*extraEnv*/ null,
+                    /*addToolEnv*/ false
+                  )
+              }
 
                 /** archive all our artifacts for reporting later */
                 junit 'target/surefire-reports/**/*.xml'
