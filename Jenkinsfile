@@ -28,7 +28,7 @@ node('docker&&linux') {
         stage('Generate Plugin Data') {
           infra.runWithMaven(
             'mvn -PgeneratePluginData',
-            /*jdk*/ '17',
+            /*jdk*/ '11',
             /*extraEnv*/ null,
             /*addToolEnv*/ false
           )
@@ -51,7 +51,7 @@ node('docker&&linux') {
               ]) {
                 infra.runWithMaven(
                     'mvn -Dmaven.test.failure.ignore verify',
-                    /*jdk*/ '17',
+                    /*jdk*/ '11',
                     /*extraEnv*/ null,
                     /*addToolEnv*/ false
                   )
