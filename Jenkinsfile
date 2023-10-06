@@ -51,7 +51,7 @@ node('docker&&linux') {
               ]) {
                 infra.runWithMaven(
                     'mvn --no-transfer-progress -Dmaven.test.failure.ignore verify',
-                    /*jdk*/ '11',
+                    /*jdk*/ '8',
                     /*extraEnv*/ null,
                     /*addToolEnv*/ false
                   )
