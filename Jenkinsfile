@@ -28,7 +28,7 @@ node('docker&&linux') {
         stage('Generate Plugin Data') {
           infra.runWithMaven(
             'mvn --no-transfer-progress -PgeneratePluginData',
-            /*jdk*/ '17',
+            /*jdk*/ '11',
             /*extraEnv*/ null,
             /*addToolEnv*/ false
           )
