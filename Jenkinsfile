@@ -26,9 +26,7 @@ node('docker&&linux') {
 
     timestamps {
         stage('Generate Plugin Data') {
-            docker.image('maven').inside {
-              sh 'mvn -PgeneratePluginData'
-            }
+          infra.runMaven(['-PgeneratePluginData'], '17', null, true, !infra.isTrusted())
         }
 
         /*
@@ -36,25 +34,18 @@ node('docker&&linux') {
          * DATA_FILE_URL necessary for the build and execution of the docker
          * container
          */
-        docker.image('nginx:alpine').withRun('-v $PWD/target:/usr/share/nginx/html') { c ->
+        docker.image('nginx:alpine').withRun('-p 80:80 -v $PWD/target:/usr/share/nginx/html') { c ->
 
             /*
              * Building our war file inside a Maven container which links to
              * the nginx container for accessing the DATA_FILE_URL
              */
             stage('Build') {
-                docker.image('maven:3-adoptopenjdk-11').inside("--link ${c.id}:nginx") {
-                    withEnv([
-                        'DATA_FILE_URL=http://nginx/plugins.json.gzip',
-                    ]) {
-                        infra.runWithMaven(
-                            'mvn -Dmaven.test.failure.ignore verify',
-                            /*jdk*/ "8",
-                            /*extraEnv*/ null,
-                            /*addToolEnv*/ false
-                          )
-                    }
-                }
+              withEnv([
+                'DATA_FILE_URL=http://localhost/plugins.json.gzip',
+              ]) {
+                infra.runMaven(['-Dmaven.test.failure.ignore',  'verify'], '8', null, true, !infra.isTrusted())
+              }
 
                 /** archive all our artifacts for reporting later */
                 junit 'target/surefire-reports/**/*.xml'
@@ -88,11 +79,8 @@ node('docker&&linux') {
              * calls against it before calling it successful
              */
             stage('Verify Container') {
-                container.withRun("--link ${c.id}:nginx -e DATA_FILE_URL=http://nginx/plugins.json.gzip") { api ->
-                    docker.image('bash@sha256:95599adce80c5f938a8445eca59a8ac4e380f75b0e3e21971b37099c0c54a187').inside("--link ${api.id}:api") {
-                        sh 'ls /usr/bin'
-                        sh '/usr/bin/wget --debug -O /dev/null --retry-connrefused --timeout 120 --tries=15 http://api:8080/versions'
-                    }
+                container.withRun("--link ${c.id}:nginx -p 8080:8080 -e DATA_FILE_URL=http://nginx/plugins.json.gzip") { api ->
+                    sh 'wget --debug -O /dev/null --retry-connrefused --timeout 120 --tries=15 http://localhost:8080/versions'
                 }
             }
 
