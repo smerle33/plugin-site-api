@@ -79,11 +79,8 @@ node('docker&&linux') {
              * calls against it before calling it successful
              */
             stage('Verify Container') {
-                container.withRun("--link ${c.id}:nginx -e DATA_FILE_URL=http://nginx/plugins.json.gzip") { api ->
-                    docker.image('bash@sha256:95599adce80c5f938a8445eca59a8ac4e380f75b0e3e21971b37099c0c54a187').inside("--link ${api.id}:api") {
-                        sh 'ls /usr/bin'
-                        sh '/usr/bin/wget --debug -O /dev/null --retry-connrefused --timeout 120 --tries=15 http://api:8080/versions'
-                    }
+                container.withRun("--link ${c.id}:nginx -p 8080:8080 -e DATA_FILE_URL=http://nginx/plugins.json.gzip") { api ->
+                    sh 'wget --debug -O /dev/null --retry-connrefused --timeout 120 --tries=15 http://localhost:8080/versions'
                 }
             }
 
