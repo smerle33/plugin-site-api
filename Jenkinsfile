@@ -50,7 +50,7 @@ node('docker&&linux') {
                 'DATA_FILE_URL=http://localhost/plugins.json.gzip',
               ]) {
                 infra.runWithMaven(
-                    'mvn --no-transfer-progress -Dmaven.test.failure.ignore verify',
+                    'mvn --no-transfer-progress -Dmaven.test.failure.ignore verify --version',
                     /*jdk*/ '8',
                     /*extraEnv*/ null,
                     /*addToolEnv*/ false
