@@ -1,7 +1,6 @@
 package io.jenkins.plugins;
 
 import io.jenkins.plugins.services.PrepareDatastoreService;
-import io.sentry.Sentry;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.Container;
@@ -21,17 +20,12 @@ import javax.ws.rs.ApplicationPath;
 public class RestApp extends ResourceConfig {
 
   public RestApp() {
-    System.setProperty("sentry.stacktrace.app.packages", "io.jenkins.plugins");
 
     // Data tier
     register(new io.jenkins.plugins.datastore.Binder());
 
     // Service tier
     register(new io.jenkins.plugins.services.Binder());
-
-    register(new io.sentry.servlet.SentryServletContainerInitializer());
-
-    register(new io.sentry.servlet.SentryServletRequestListener());
 
     // Ensure datastore is populated at boot
     register(new ContainerLifecycleListener() {
@@ -41,8 +35,6 @@ public class RestApp extends ResourceConfig {
         final PrepareDatastoreService service = locator.getService(PrepareDatastoreService.class);
         service.populateDataStore();
         service.schedulePopulateDataStore();
-
-        Sentry.init();
 
       }
 
